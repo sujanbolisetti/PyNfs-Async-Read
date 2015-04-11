@@ -1,0 +1,114 @@
+diff --git a/nfs4.1/xdrdef/nfs4.x b/nfs4.1/xdrdef/nfs4.x
+index 88cb58b..6012366 100644
+--- a/nfs4.1/xdrdef/nfs4.x
++++ b/nfs4.1/xdrdef/nfs4.x
+@@ -1797,6 +1797,27 @@ union READ4res switch (nfsstat4 status) {
+          void;
+ };
+ 
++
++/* Async Read */
++
++struct ASYNCREAD4args{
++	uint64_t	reqId;
++	offset4		offset;
++	count4		count;
++};
++
++
++struct ASYNCREAD4resok {
++	nfsstat4	status;
++};
++
++union ASYNCREAD4res switch (nfsstat4 status) {
++ case NFS4_OK:
++	 ASYNCREAD4resok resok4;
++ default:
++	 void;
++};
++
+ struct READDIR4args {
+         /* CURRENT_FH: directory */
+         nfs_cookie4     cookie;
+@@ -2641,6 +2662,7 @@ enum nfs_opnum4 {
+  OP_WANT_DELEGATION     = 56,
+  OP_DESTROY_CLIENTID    = 57,
+  OP_RECLAIM_COMPLETE    = 58,
++ OP_ASYNC_READ 		    = 59,
+  OP_ILLEGAL             = 10044
+ };
+ 
+@@ -2745,7 +2767,8 @@ union nfs_argop4 switch (nfs_opnum4 argop) {
+  case OP_RECLAIM_COMPLETE:
+                         RECLAIM_COMPLETE4args
+                                 opreclaim_complete;
+-
++case OP_ASYNC_READ:		
++						ASYNCREAD4args opread_async;
+  /* Operations not new to NFSv4.1 */
+  case OP_ILLEGAL:       void;
+ };
+@@ -2859,6 +2882,9 @@ union nfs_resop4 switch (nfs_opnum4 resop) {
+  case OP_RECLAIM_COMPLETE:
+                         RECLAIM_COMPLETE4res
+                                 opreclaim_complete;
++case OP_ASYNCREAD : 
++						ASYNCREAD4res 
++								opread_async;
+ 
+  /* Operations not new to NFSv4.1 */
+  case OP_ILLEGAL:       ILLEGAL4res opillegal;
+@@ -3166,6 +3192,26 @@ struct CB_NOTIFY_DEVICEID4res {
+         nfsstat4        cndr_status;
+ };
+ 
++/* Async Read Call back */
++
++struct CB_ASYNCREAD4argsok {
++	nfs_fh4		fh;
++	uint64_t	reqId;
++	bool		eof;
++	opaque		data<>;
++};
++
++struct CB_ASYNCREAD4res {
++	nfsstat4	status;
++};
++
++union CB_ASYNCREAD4args switch (nfsstat4 status) {
++ case NFS4_OK:
++	 CB_ASYNCREAD4argsok    argok4;
++ default:
++	 void;
++};
++
+ /*
+  * Various definitions for CB_COMPOUND
+  */
+@@ -3184,6 +3230,8 @@ enum nfs_cb_opnum4 {
+         OP_CB_WANTS_CANCELLED   = 12,
+         OP_CB_NOTIFY_LOCK       = 13,
+         OP_CB_NOTIFY_DEVICEID   = 14,
++        OP_CB_ASYNCREAD		= 15,
++        
+ 
+         OP_CB_ILLEGAL           = 10044
+ };
+@@ -3213,6 +3261,8 @@ union nfs_cb_argop4 switch (unsigned argop) {
+       CB_NOTIFY_LOCK4args       opcbnotify_lock;
+  case OP_CB_NOTIFY_DEVICEID:
+       CB_NOTIFY_DEVICEID4args   opcbnotify_deviceid;
++ case OP_CB_ASYNCREAD:	
++ 	  CB_ASYNCREAD4args opcbasyncread;
+  case OP_CB_ILLEGAL:            void;
+ };
+ 
+@@ -3254,6 +3304,8 @@ union nfs_cb_resop4 switch (unsigned resop) {
+  case OP_CB_NOTIFY_DEVICEID:
+                         CB_NOTIFY_DEVICEID4res
+                                         opcbnotify_deviceid;
++ case OP_CB_ASYNCREAD:	
++ 						CB_ASYNCREAD4res opcbasyncread;
+ 
+  /* Not new operation */
+  case OP_CB_ILLEGAL:    CB_ILLEGAL4res  opcbillegal;

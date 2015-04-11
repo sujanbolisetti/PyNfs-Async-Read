@@ -1,0 +1,149 @@
+diff --git a/nfs4.0/nfs4.x b/nfs4.0/nfs4.x
+index 01ffa5f..3bfbf83 100644
+--- a/nfs4.0/nfs4.x
++++ b/nfs4.0/nfs4.x
+@@ -1160,6 +1160,7 @@ struct READ4args {
+ 	count4		count;
+ };
+ 
++
+ struct READ4resok {
+ 	bool		eof;
+ 	opaque		data<>;
+@@ -1172,6 +1173,27 @@ union READ4res switch (nfsstat4 status) {
+ 	 void;
+ };
+ 
++/* Async Read */
++
++struct ASYNCREAD4args{
++	stateid4	stateid;
++	offset4		offset;
++	count4		count;
++};
++
++
++struct ASYNCREAD4resok {
++	nfsstat4	status;
++};
++
++union ASYNCREAD4res switch (nfsstat4 status) {
++ case NFS4_OK:
++	 ASYNCREAD4resok resok4;
++ default:
++	 void;
++};
++
++
+ /*
+  * READDIR: Read directory
+  */
+@@ -1421,6 +1443,10 @@ union WRITE4res switch (nfsstat4 status) {
+ 	 void;
+ };
+ 
++
++
++
++
+ /*
+  * RELEASE_LOCKOWNER: Notify server to release lockowner
+  */
+@@ -1482,6 +1508,7 @@ enum nfs_opnum4 {
+ 	OP_WRITE		= 38,
+ 	OP_RELEASE_LOCKOWNER	= 39,
+ 	OP_GET_DIR_DELEGATION	= 40,
++	OP_ASYNC_READ  = 41,
+ 	OP_ILLEGAL		= 10044
+ };
+ 
+@@ -1527,6 +1554,7 @@ union nfs_argop4 switch (nfs_opnum4 argop) {
+ 				    oprelease_lockowner;
+  case OP_GET_DIR_DELEGATION:	GET_DIR_DELEGATION4args 
+  				    opget_dir_delegation;
++ case OP_ASYNC_READ:		ASYNCREAD4args opread_async;
+  case OP_ILLEGAL:	void;
+ };
+ 
+@@ -1572,6 +1600,7 @@ union nfs_resop4 switch (nfs_opnum4 resop){
+ 				    oprelease_lockowner;
+  case OP_GET_DIR_DELEGATION:	GET_DIR_DELEGATION4res 
+  				    opget_dir_delegation;
++ case OP_ASYNCREAD : ASYNCREAD4res opread_async;
+  case OP_ILLEGAL:	ILLEGAL4res opillegal;
+ };
+ 
+@@ -1626,6 +1655,7 @@ union CB_GETATTR4res switch (nfsstat4 status) {
+ 	 void;
+ };
+ 
++
+ /*
+  * CB_RECALL: Recall an Open Delegation
+  */
+@@ -1639,12 +1669,35 @@ struct CB_RECALL4res {
+ 	nfsstat4	status;
+ };
+ 
++
++
+ /*
+  * CB_ILLEGAL: Response for illegal operation numbers
+  */
+ struct CB_ILLEGAL4res {
+ 	nfsstat4        status;
+ };
++/* Async Read Call back */
++
++struct CB_ASYNCREAD4argsok {
++	nfs_fh4		fh;
++	stateid4	stateid;
++	bool		eof;
++	opaque		data<>;
++};
++
++struct CB_ASYNCREAD4res {
++	nfsstat4	status;
++};
++
++union CB_ASYNCREAD4args switch (nfsstat4 status) {
++ case NFS4_OK:
++	 CB_ASYNCREAD4argsok    argok4;
++ default:
++	 void;
++};
++
++
+ 
+ /*
+  * Various definitions for CB_COMPOUND
+@@ -1652,18 +1705,21 @@ struct CB_ILLEGAL4res {
+ enum nfs_cb_opnum4 {
+ 	OP_CB_GETATTR		= 3,
+ 	OP_CB_RECALL		= 4,
++	OP_CB_ASYNCREAD		= 5,
+ 	OP_CB_ILLEGAL		= 10044
+ };
+ 
+ union nfs_cb_argop4 switch (unsigned argop) {
+  case OP_CB_GETATTR:	CB_GETATTR4args opcbgetattr;
+  case OP_CB_RECALL:	CB_RECALL4args	opcbrecall;
++ case OP_CB_ASYNCREAD:	CB_ASYNCREAD4args opcbasyncread;
+  case OP_CB_ILLEGAL:	void;
+ };
+ 
+ union nfs_cb_resop4 switch (unsigned resop){
+  case OP_CB_GETATTR:	CB_GETATTR4res	opcbgetattr;
+  case OP_CB_RECALL:	CB_RECALL4res	opcbrecall;
++ case OP_CB_ASYNCREAD:	CB_ASYNCREAD4res opcbasyncread;
+  case OP_CB_ILLEGAL:	CB_ILLEGAL4res	opcbillegal;
+ };
+ 
+@@ -1681,6 +1737,7 @@ struct CB_COMPOUND4res {
+ };
+ 
+ 
++
+ /*
+  * Program number is in the transient range since the client
+  * will assign the exact transient program number and provide

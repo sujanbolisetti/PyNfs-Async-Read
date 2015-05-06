@@ -106,8 +106,9 @@ class Test(object):
             self.fullname = module.split('.')[-1] + '.' + self.name
         else:
             self.fullname = self.name
+        
         self.doc = function.__doc__.split('\n')[0].strip()
-        #self.doc = function.__doc__.strip()
+        self.doc = function.__doc__.strip()
         self.result = Result()
         self._read_docstr(function.__doc__)
         self.time_taken = 0

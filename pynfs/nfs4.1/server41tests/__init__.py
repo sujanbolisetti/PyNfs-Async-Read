@@ -7,8 +7,9 @@ __all__ = ["st_exchange_id.py", # draft 21
            "st_secinfo_no_name.py",
            "st_secinfo.py",
            "st_sequence.py",
-	   "st_trunking.py",
+	       "st_trunking.py",
            "st_open.py",
+           "st_asyncread.py",
            "st_delegation.py",
            "st_verify.py",
            "st_getdevicelist.py",
@@ -21,5 +22,5 @@ __all__ = ["st_exchange_id.py", # draft 21
            "st_block.py",
 ##           "st_debug.py",
 ##           "st_loop",
-           "st_current_stateid.py",
+           "st_current_stateid.py"
            ]

@@ -18,7 +18,7 @@ from nfs4commoncode import CBCompoundState as CompoundState, \
 
 import traceback
 import logging
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.WARN,
                     format="%(levelname)-7s:%(name)s:%(message)s")
 log_cb = logging.getLogger("nfs.client.cb")
 
@@ -130,8 +130,10 @@ class NFS4Client(rpc.Client, rpc.Server):
         log_cb.info("Handling COMPOUND")
         # data is an XDR packed string.  Unpack it.
         unpacker = nfs4lib.FancyNFS4Unpacker(data)
+        
         try:
             args = unpacker.unpack_CB_COMPOUND4args()
+            #print "in handle_1 ",args
             unpacker.done()
         except:
             log_cb.warn("returning GARBAGE_ARGS")

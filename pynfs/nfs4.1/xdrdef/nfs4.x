@@ -1801,10 +1801,11 @@ union READ4res switch (nfsstat4 status) {
 /* Async Read */
 
 struct ASYNC_READ4args{
-	uint64_t	reqId;
+	uint64_t   	reqid;
 	stateid4    stateid;
 	offset4		offset;
 	count4		count;
+	uint32_t    timeout;
 };
 
 
@@ -2658,7 +2659,7 @@ enum nfs_opnum4 {
  OP_WANT_DELEGATION     = 56,
  OP_DESTROY_CLIENTID    = 57,
  OP_RECLAIM_COMPLETE    = 58,
- OP_ASYNC_READ 		    = 59,
+ OP_ASYNC_READ 		    = 68,
  OP_ILLEGAL             = 10044
 };
 
@@ -2878,9 +2879,9 @@ union nfs_resop4 switch (nfs_opnum4 resop) {
  case OP_RECLAIM_COMPLETE:
                         RECLAIM_COMPLETE4res
                                 opreclaim_complete;
-case OP_ASYNC_READ : 
-						ASYNC_READ4res 
-								opasync_read;
+	case OP_ASYNC_READ : 
+							ASYNC_READ4res 
+									opasync_read;
 
  /* Operations not new to NFSv4.1 */
  case OP_ILLEGAL:       ILLEGAL4res opillegal;
@@ -2981,6 +2982,7 @@ struct CB_LAYOUTRECALL4args {
         bool                    clora_changed;
         layoutrecall4           clora_recall;
 };
+
 struct CB_LAYOUTRECALL4res {
         nfsstat4        clorr_status;
 };
@@ -3191,7 +3193,7 @@ struct CB_NOTIFY_DEVICEID4res {
 /* Async Read Call back */
 
 struct CB_ASYNC_READ4argsok {
-	uint64_t	reqId;
+	uint64_t	reqid;
 	bool		eof;
 	opaque		data<>;
 };

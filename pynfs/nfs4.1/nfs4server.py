@@ -486,8 +486,8 @@ class Slot(object):
                 a reply for the first request.
                 """
                 raise NFS4Replay(self.replay_cache)
-            else:
-                raise NFS4Error(NFS4ERR_SEQ_MISORDERED)
+#             else:
+#                 raise NFS4Error(NFS4ERR_SEQ_MISORDERED)
         finally:
             self.lock.release()
 
@@ -1349,50 +1349,46 @@ class NFS4Server(rpc.Server):
         res = READ4resok(eof, data)
         return encode_status(NFS4_OK, res)
     
+    '''
+            This method will perform the actual async_read and sends the call back 
+            to the client
+        
+    '''
     def async_read(self,arg,env):
         client = self.clients[env.session.client.clientid]
         check_cfh(env)
         env.cfh.verify_file()
-#         with find_state(env, arg.stateid, allow_bypass= \
-#                             env.session.client.config.allow_stateid1) as state:
-#             state.has_permission(OPEN4_SHARE_ACCESS_READ)
-#             state.mark_reading()
-        
-                # BUG - need to fix fs locking
         data = env.cfh.read(arg.offset, arg.count, env.principal)
         eof = (arg.offset + len(data)) >= env.cfh.fattr4_size
         session = client.find_active_cb_session()
         if session is None:
-            # BUG deal with this
             raise RuntimeError
+        
         slot = session.channel_back.choose_slot()
         seq_op = op4.cb_sequence(session.sessionid, slot.get_seqid(),
-                                slot.id, slot.id, True, []) # STUB
-        async_obj = CB_ASYNC_READ4argsok(arg.reqId,eof,data)
-        print "data",data
+                                slot.id, slot.id, True, []) 
+        
+        async_obj = CB_ASYNC_READ4argsok(arg.reqid,eof,data)
         
         async_op = op4.cb_async_read(NFS4_OK,async_obj)
         
         pipe = session.channel_back.connections[0]
+        
+        print "data to be send in async read ",data
+        
+        # performing the call back operation
         xid = self.cb_compound_async([seq_op, async_op], 
                                            session.cb_prog, pipe=pipe)
-        # Note it is possible that self.invalid is True, but don't 
-        # want to take the lock
-        #self.status = CB_SENT
         res = self.cb_listen(xid, pipe)
+        
         session.channel_back.free_slot(slot.id)
         if res.status != NFS4_OK:
-                # NOTE - this could 'legit' occur if client sends DELEG_RETURN
-                # and get OK before responding to CB_RECALL, could happen
-                # if client spontaneously sends DELEG_RETURN about the same
-                # time server sends CB_RECALL
-                # STUB - now what???
                 raise RuntimeError
         else:
-            print "Success in Async_read"
-            #self.status = (CB_RECEIVED if not self.invalid else INVALID)
+            print "Success in Async_read ",arg.reqid
         
     def op_async_read(self,arg,env):
+        # creating a new thread for performing actual read and callback
         t = threading.Thread(target=self.async_read,args=(arg,env))
         t.setDaemon(True)
         t.start()

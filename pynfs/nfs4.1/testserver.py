@@ -313,7 +313,7 @@ def main():
 
     # Place tests in desired order
     tests.sort() # FIXME - add options for random sort
-
+    
     # Run the tests and save/print results
     try:
         env = environment.Environment(opt)

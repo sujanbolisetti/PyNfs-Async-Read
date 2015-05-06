@@ -1,0 +1,6 @@
+Could not find gssapi module, proceeding without
+Mounting (4, 0) on '/config'
+Mounting (3, 1) on '/a'
+Mounting (2, 2) on '/b'
+Mounting (2, 3) on '/foo/bar/c'
+>>> >>> 
